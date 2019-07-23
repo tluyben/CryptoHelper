@@ -11,7 +11,7 @@ namespace CryptoHelper.Test
             var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
             var keys = bouncyCryptoHelper.GenerateKeyPair();
 
-            var input = "Example message for decryption/encription! With spec symbol";
+            var input = "Example message for decryption/encription! With spec symbol ™";
             var publicKey = keys.Item1;
             var privateKey = keys.Item2;
 
@@ -27,7 +27,7 @@ namespace CryptoHelper.Test
             var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
             var keys = bouncyCryptoHelper.GenerateKeyPair();
 
-            var input = "Example message for decryption/encription! With spec symbol";
+            var input = "Example message for decryption/encription! With spec symbol ™";
             var publicKey = keys.Item1;
             var privateKey = keys.Item2;
 
