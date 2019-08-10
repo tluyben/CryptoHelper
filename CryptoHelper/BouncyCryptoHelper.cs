@@ -17,13 +17,15 @@ namespace CryptoHelper
     {
         private readonly IAsymmetricCipherKeyPairGenerator _keyPairGenerator;
 
-        public BouncyCryptoHelper(string name) : this(name, 4096){}
+        public BouncyCryptoHelper(string name) : this(name, 4096, 512){}
 
+        private readonly int _shaImpl;
 
-        public BouncyCryptoHelper(string name, int bits)
+        public BouncyCryptoHelper(string name, int bits, int shaImpl)
         {
             _keyPairGenerator = GeneratorUtilities.GetKeyPairGenerator(name);
             _keyPairGenerator.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(17), new SecureRandom(), bits, 25));
+            _shaImpl = shaImpl; 
         }
 
         public string DecryptMessage(string message, string privateKey)
@@ -50,10 +52,41 @@ namespace CryptoHelper
             return  new Tuple<string, string>(PublicConvert(keys.Public), PrivateConvert(keys.Private));
         }
 
+        private IDigest GetShaDigest()
+        {
+            IDigest shaDigest = null;
+
+            if (_shaImpl == 1)
+            {
+                shaDigest = new Sha1Digest();
+            }
+            else if (_shaImpl == 3)
+            {
+                shaDigest = new Sha3Digest();
+            }
+            else if (_shaImpl == 224)
+            {
+                shaDigest = new Sha224Digest();
+            }
+            else if (_shaImpl == 256)
+            {
+                shaDigest = new Sha256Digest();
+            }
+            else if (_shaImpl == 384)
+            {
+                shaDigest = new Sha384Digest();
+            }
+            else
+            {
+                shaDigest = new Sha512Digest(); 
+            }
+            return shaDigest;
+        }
+
         public string SignMessage(string message, string privateKey)
         {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
-            var signer = new RsaDigestSigner(new Sha512Digest());
+            var signer = new RsaDigestSigner(GetShaDigest());
             signer.Init(true, PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey)));
             signer.BlockUpdate(bytesToEncrypt, 0, bytesToEncrypt.Length);
 
@@ -64,7 +97,7 @@ namespace CryptoHelper
         {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
 
-            var signer = new RsaDigestSigner(new Sha512Digest());
+            var signer = new RsaDigestSigner(GetShaDigest());
             signer.Init(false, PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey)));
             signer.BlockUpdate(bytesToEncrypt, 0, bytesToEncrypt.Length);
 
