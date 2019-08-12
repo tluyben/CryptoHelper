@@ -5,13 +5,10 @@ using Org.BouncyCastle.Crypto.Engines;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Signers;
 using Org.BouncyCastle.Math;
-using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
-using Org.BouncyCastle.X509;
 using System;
 using System.IO;
 using System.Text;
-using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.OpenSsl;
 
 namespace CryptoHelper
