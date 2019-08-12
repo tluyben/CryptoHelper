@@ -4,10 +4,9 @@ using System.Text;
 
 namespace CryptoHelper
 {
-    interface ICryptoHelper
+    public interface ICryptoHelper
     {
-        Tuple<string, string> GenerateKeyPair();
-
+        
         string SignMessage(string message, string privateKey);
 
         bool VerifyMessage(string message, string signature, string publicKey);
