@@ -17,6 +17,8 @@ namespace CryptoHelper
     {
         private readonly IAsymmetricCipherKeyPairGenerator _keyPairGenerator;
 
+        public BouncyCryptoHelper() : this("RSA") { }
+
         public BouncyCryptoHelper(string name) : this(name, 4096, 512)
         {
         }
@@ -44,10 +46,17 @@ namespace CryptoHelper
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
             var encryptEngine = new Pkcs1Encoding(new RsaEngine());
 
-            encryptEngine.Init(true, GetPublic(publicKey));
+            if (!publicKey.Contains("RSA"))
+            {
+                encryptEngine.Init(true, PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey)));
+            }
+            else
+            {
+                encryptEngine.Init(true, GetPublic(publicKey));
+            }
             return Convert.ToBase64String(encryptEngine.ProcessBlock(bytesToEncrypt, 0, bytesToEncrypt.Length));
         }
-
+        
         private string ToPem(object obj)
         {
             using (var mem = new MemoryStream())

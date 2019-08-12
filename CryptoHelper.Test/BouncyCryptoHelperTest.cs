@@ -10,9 +10,9 @@ namespace CryptoHelper.Test
         [Fact]
         public void RsaDecryptEncryptTest()
         {
-            var bouncyCryptoHelper = new BouncyCryptoHelper();
+            var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
             var bouncyGenerator = new BouncyCastleKeyGenerator(2048);
-            var keys = bouncyGenerator.GenerateKeyPair();
+            var keys = bouncyCryptoHelper.GenerateKeyPair();
 
             var input = "Example message for decryption/encription! With spec symbol �";
             var publicKey = keys.Item1;
@@ -107,9 +107,9 @@ namespace CryptoHelper.Test
         [Fact]
         public void RsaSignTest()
         {
-            var bouncyCryptoHelper = new BouncyCryptoHelper();
+            var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
             var bouncyGenerator = new BouncyCastleKeyGenerator(2048);
-            var keys = bouncyGenerator.GenerateKeyPair();
+            var keys = bouncyCryptoHelper.GenerateKeyPair();
 
             var input = "Example message for decryption/encription! With spec symbol �";
             var publicKey = keys.Item1;

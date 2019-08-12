@@ -24,35 +24,11 @@ namespace CryptoHelper.REST
             _serverKeysStore = serverKeysStore;
         }
         
-        public string GenerateKeys()
-        {            
-            _serverKeysStore.Update(_cryptoGenerator.GenerateKeyPair());            
-            return "Keys were generated";
-        }
-
         [HttpPost]
-        public string EnrollKey([FromBody] RequestEnrollKey requestEnrollKey)
+        public JsonResult EnrollKey([FromBody] RequestEnrollKey requestEnrollKey)
         {
-            _clientKeysStore.Save(requestEnrollKey.deviceId, requestEnrollKey.publicKey);
-            return _cryptoHelper.EncryptMessage(_serverKeysStore.Get().Item1, requestEnrollKey.publicKey);
-        }
-
-        public string EncryptedData(string message)
-        {
-            return _cryptoHelper.DecryptMessage(message, _serverKeysStore.Get().Item2);
-        }
-
-        public JsonResult GetData()
-        {
-            const string data = "Some data";
-            var signature = _cryptoHelper.SignMessage(data, _serverKeysStore.Get().Item2);
-            
-            return Json(new { hash = signature, data = data});
-        }
-
-        public JsonResult Verify(string deviceId, string message, string hash)
-        {
-            return Json(new {Success = _cryptoHelper.VerifyMessage(message, hash, _clientKeysStore.Get(deviceId))});
+            var result = _cryptoHelper.EncryptMessage("hello", requestEnrollKey.publicKey);
+            return Json(new { message = result});
         }
     }
 }
