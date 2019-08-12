@@ -9,7 +9,10 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using System;
+using System.IO;
 using System.Text;
+using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.OpenSsl;
 
 namespace CryptoHelper
 {
@@ -17,23 +20,25 @@ namespace CryptoHelper
     {
         private readonly IAsymmetricCipherKeyPairGenerator _keyPairGenerator;
 
-        public BouncyCryptoHelper(string name) : this(name, 4096, 512){}
+        public BouncyCryptoHelper(string name) : this(name, 4096, 512)
+        {
+        }
 
         private readonly int _shaImpl;
 
         public BouncyCryptoHelper(string name, int bits, int shaImpl)
         {
             _keyPairGenerator = GeneratorUtilities.GetKeyPairGenerator(name);
-            _keyPairGenerator.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(17), new SecureRandom(), bits, 25));
-            _shaImpl = shaImpl; 
+            _keyPairGenerator.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(17), new SecureRandom(), bits,
+                25));
+            _shaImpl = shaImpl;
         }
 
         public string DecryptMessage(string message, string privateKey)
         {
             var bytesToDecrypt = Convert.FromBase64String(message);
             var decryptEngine = new Pkcs1Encoding(new RsaEngine());
-
-            decryptEngine.Init(false, PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey)));
+            decryptEngine.Init(false, GetPrivate(privateKey));
             return Encoding.UTF8.GetString(decryptEngine.ProcessBlock(bytesToDecrypt, 0, bytesToDecrypt.Length));
         }
 
@@ -42,14 +47,31 @@ namespace CryptoHelper
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
             var encryptEngine = new Pkcs1Encoding(new RsaEngine());
 
-            encryptEngine.Init(true, PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey)));
+            encryptEngine.Init(true, GetPublic(publicKey));
             return Convert.ToBase64String(encryptEngine.ProcessBlock(bytesToEncrypt, 0, bytesToEncrypt.Length));
+        }
+
+        private string ToPem(object obj)
+        {
+            using (var mem = new MemoryStream())
+            {
+                var writer = new StreamWriter(mem);
+                var reader = new StreamReader(mem);
+
+                var pem = new PemWriter(writer);
+                pem.WriteObject(obj);
+                pem.Writer.Flush();
+                mem.Position = 0;
+
+                return reader.ReadToEnd();
+            }
         }
 
         public Tuple<string, string> GenerateKeyPair()
         {
-            var keys =_keyPairGenerator.GenerateKeyPair();
-            return  new Tuple<string, string>(PublicConvert(keys.Public), PrivateConvert(keys.Private));
+            var keys = _keyPairGenerator.GenerateKeyPair();
+
+            return new Tuple<string, string>(ToPem(keys.Public), ToPem(keys.Private));
         }
 
         private IDigest GetShaDigest()
@@ -78,8 +100,9 @@ namespace CryptoHelper
             }
             else
             {
-                shaDigest = new Sha512Digest(); 
+                shaDigest = new Sha512Digest();
             }
+
             return shaDigest;
         }
 
@@ -87,7 +110,8 @@ namespace CryptoHelper
         {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
             var signer = new RsaDigestSigner(GetShaDigest());
-            signer.Init(true, PrivateKeyFactory.CreateKey(Convert.FromBase64String(privateKey)));
+
+            signer.Init(true, GetPrivate(privateKey));
             signer.BlockUpdate(bytesToEncrypt, 0, bytesToEncrypt.Length);
 
             return Convert.ToBase64String(signer.GenerateSignature());
@@ -98,25 +122,29 @@ namespace CryptoHelper
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
 
             var signer = new RsaDigestSigner(GetShaDigest());
-            signer.Init(false, PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey)));
+            signer.Init(false, GetPublic(publicKey));
+
             signer.BlockUpdate(bytesToEncrypt, 0, bytesToEncrypt.Length);
 
             return signer.VerifySignature(Convert.FromBase64String(signature));
         }
 
-        private string PublicConvert(AsymmetricKeyParameter key)
-        {
-            var privateKeyInfo = SubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(key);
-            byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetDerEncoded();
-            return Convert.ToBase64String(serializedPrivateBytes);
-        }        
-         
-        private string PrivateConvert(AsymmetricKeyParameter key)
-        {
-            var privateKeyInfo = PrivateKeyInfoFactory.CreatePrivateKeyInfo(key);
-            byte[] serializedPrivateBytes = privateKeyInfo.ToAsn1Object().GetDerEncoded();
-            return Convert.ToBase64String(serializedPrivateBytes);
-        }
 
+        private AsymmetricKeyParameter GetPrivate(string pem)
+        {
+            using (var stringReader = new StringReader(pem))
+            {
+                var chiperPair = (AsymmetricCipherKeyPair)new PemReader(stringReader).ReadObject();
+                return chiperPair.Private;
+            }
+
+        }
+        private AsymmetricKeyParameter GetPublic(string pem)
+        {
+            using (var stringReader = new StringReader(pem))
+            {
+                return (AsymmetricKeyParameter) new PemReader(stringReader).ReadObject();
+            }
+        }
     }
 }
