@@ -1,33 +1,29 @@
 ﻿using System;
+using CryptoHelper.REST.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CryptoHelper.REST
 {
     public class CryptoHelperController : Controller
     {
-        private readonly ICryptoGenerator _cryptoGenerator;
         private readonly ICryptoHelper _cryptoHelper;
-        private readonly IClientKeysStore _clientKeysStore;
-        private readonly IServerKeysStore _serverKeysStore;
-
         
-        public CryptoHelperController(
-            ICryptoGenerator cryptoGenerator,
-            ICryptoHelper cryptoHelper,
-            IClientKeysStore clientKeysStore,
-            IServerKeysStore serverKeysStore
-            )
+        public CryptoHelperController(ICryptoHelper cryptoHelper)
         {
-            _cryptoGenerator = cryptoGenerator;
             _cryptoHelper = cryptoHelper;
-            _clientKeysStore = clientKeysStore;
-            _serverKeysStore = serverKeysStore;
         }
         
         [HttpPost]
-        public JsonResult EnrollKey([FromBody] RequestEnrollKey requestEnrollKey)
+        public JsonResult DecryptedMessage([FromBody] DecryptMessageRequest decryptMessageRequest)
         {
-            var result = _cryptoHelper.EncryptMessage("hello", requestEnrollKey.publicKey);
+            var result = _cryptoHelper.EncryptMessage("Message from the server which was decrypted!", decryptMessageRequest.publicKey);
+            return Json(new { message = result});
+        }
+        
+        [HttpPost]
+        public JsonResult VerifyMessage([FromBody] VerifyMessageRequest request)
+        {
+            var result = _cryptoHelper.VerifyMessage(request.message, request.signature, request.publicKey);
             return Json(new { message = result});
         }
     }

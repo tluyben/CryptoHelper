@@ -15,22 +15,21 @@ namespace CryptoHelper
 {
     public class BouncyCryptoHelper : ICryptoHelper
     {
+        private const string Algorithm = "RSA";
         private readonly IAsymmetricCipherKeyPairGenerator _keyPairGenerator;
-
-        public BouncyCryptoHelper() : this("RSA") { }
-
-        public BouncyCryptoHelper(string name) : this(name, 4096, 512)
+        private readonly int _shaBits;
+        
+        public BouncyCryptoHelper(): this(4096, 256){}
+        public BouncyCryptoHelper(int bits, int shaBits)
         {
-        }
-
-        private readonly int _shaImpl;
-
-        public BouncyCryptoHelper(string name, int bits, int shaImpl)
-        {
-            _keyPairGenerator = GeneratorUtilities.GetKeyPairGenerator(name);
-            _keyPairGenerator.Init(new RsaKeyGenerationParameters(BigInteger.ValueOf(17), new SecureRandom(), bits,
-                25));
-            _shaImpl = shaImpl;
+            _keyPairGenerator = GeneratorUtilities.GetKeyPairGenerator(Algorithm);
+            _keyPairGenerator.Init(
+                new RsaKeyGenerationParameters(
+                    BigInteger.ValueOf(17), 
+                    new SecureRandom(), 
+                    bits, 
+                    25));
+            _shaBits = shaBits;
         }
 
         public string DecryptMessage(string message, string privateKey)
@@ -46,14 +45,7 @@ namespace CryptoHelper
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
             var encryptEngine = new Pkcs1Encoding(new RsaEngine());
 
-            if (!publicKey.Contains("RSA"))
-            {
-                encryptEngine.Init(true, PublicKeyFactory.CreateKey(Convert.FromBase64String(publicKey)));
-            }
-            else
-            {
-                encryptEngine.Init(true, GetPublic(publicKey));
-            }
+            encryptEngine.Init(true, GetPublic(publicKey));
             return Convert.ToBase64String(encryptEngine.ProcessBlock(bytesToEncrypt, 0, bytesToEncrypt.Length));
         }
         
@@ -84,23 +76,23 @@ namespace CryptoHelper
         {
             IDigest shaDigest = null;
 
-            if (_shaImpl == 1)
+            if (_shaBits == 1)
             {
                 shaDigest = new Sha1Digest();
             }
-            else if (_shaImpl == 3)
+            else if (_shaBits == 3)
             {
                 shaDigest = new Sha3Digest();
             }
-            else if (_shaImpl == 224)
+            else if (_shaBits == 224)
             {
                 shaDigest = new Sha224Digest();
             }
-            else if (_shaImpl == 256)
+            else if (_shaBits == 256)
             {
                 shaDigest = new Sha256Digest();
             }
-            else if (_shaImpl == 384)
+            else if (_shaBits == 384)
             {
                 shaDigest = new Sha384Digest();
             }
@@ -135,7 +127,6 @@ namespace CryptoHelper
             return signer.VerifySignature(Convert.FromBase64String(signature));
         }
 
-
         private AsymmetricKeyParameter GetPrivate(string pem)
         {
             using (var stringReader = new StringReader(pem))
@@ -145,12 +136,23 @@ namespace CryptoHelper
             }
 
         }
+
         private AsymmetricKeyParameter GetPublic(string pem)
         {
-            using (var stringReader = new StringReader(pem))
+            if (DoesKeyHaveHeader(pem))
             {
-                return (AsymmetricKeyParameter) new PemReader(stringReader).ReadObject();
+                using (var stringReader = new StringReader(pem))
+                {
+                    return (AsymmetricKeyParameter)new PemReader(stringReader).ReadObject();
+                }
             }
+
+            return PublicKeyFactory.CreateKey(Convert.FromBase64String(pem));
+        }
+
+        private bool DoesKeyHaveHeader(string key)
+        {
+            return key.Contains("BEGIN");
         }
     }
 }

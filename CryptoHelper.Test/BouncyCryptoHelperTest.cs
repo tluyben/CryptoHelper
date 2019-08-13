@@ -1,5 +1,3 @@
-using System;
-using System.Text;
 using Xunit;
 
 namespace CryptoHelper.Test
@@ -8,13 +6,12 @@ namespace CryptoHelper.Test
     public class BouncyCryptoHelperTest
     {
         [Fact]
-        public void RsaDecryptEncryptTest()
+        public void ServerRsaEncryptionDecryptionTest()
         {
-            var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
-            var bouncyGenerator = new BouncyCastleKeyGenerator(2048);
+            var bouncyCryptoHelper = new BouncyCryptoHelper();
             var keys = bouncyCryptoHelper.GenerateKeyPair();
 
-            var input = "Example message for decryption/encription! With spec symbol �";
+            var input = "Example message for decryption/encryption! With spec symbol ™";
             var publicKey = keys.Item1;
             var privateKey = keys.Item2;
 
@@ -24,14 +21,29 @@ namespace CryptoHelper.Test
 
             Assert.Equal(input,output);
         }
+        
+        [Fact]
+        public void ServerRsaVerificationTest()
+        {
+            var bouncyCryptoHelper = new BouncyCryptoHelper();
+            var keys = bouncyCryptoHelper.GenerateKeyPair();
+
+            var input = "Example message for decryption/encryption! With spec symbol ™";
+            var publicKey = keys.Item1;
+            var privateKey = keys.Item2;
+
+            var encryptedMessage = bouncyCryptoHelper.SignMessage(input, privateKey);
+            Assert.True(bouncyCryptoHelper.VerifyMessage(input, encryptedMessage, publicKey));
+        }
+
 
 
         [Fact]
-        public void MobileRsaKeysTest()
+        public void MobileReactNativeRsaNativeEncryptionDecryptionTest()
         {
-            var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
-            var input = "Example message for decryption/encription! With spec symbol �";
-            var publicKey =
+            var bouncyCryptoHelper = new BouncyCryptoHelper();
+            var input = "Example message for decryption/encryption! With spec symbol ™";
+            var mobilePublicKey =
                 "-----BEGIN RSA PUBLIC KEY-----\n" +
                 "MIICCgKCAgEApx7x891JbXsJETEQNqzy67Wu3avqK5KDVTwepWrMa+/9tRMeHgka\n" +
                 "hYKlFmf7kX3BHXiskWAsyB3y83JernX+jl3sbM9WHwi9AVbjJMnVrP2gCeY/OO33\n" +
@@ -45,7 +57,8 @@ namespace CryptoHelper.Test
                 "xamEZKA7SYGOpdqmJVypWMEDUFd49BqYo4/94iVgFUAzg+ypc8lLxC8CFPrunkmL\n" +
                 "QfxyoZ50yB3OvKl3pR9Uk7n4+aBBPYRDEqOosZ71ARzW3iBnGSnlsmECAwEAAQ==\n" +
                 "-----END RSA PUBLIC KEY-----\n";
-            var privateKey =
+            
+            var mobilePrivateKey =
                 "-----BEGIN RSA PRIVATE KEY-----\n" +
                 "MIIJKgIBAAKCAgEApx7x891JbXsJETEQNqzy67Wu3avqK5KDVTwepWrMa+/9tRMe\n" +
                 "HgkahYKlFmf7kX3BHXiskWAsyB3y83JernX+jl3sbM9WHwi9AVbjJMnVrP2gCeY/\n" +
@@ -98,25 +111,55 @@ namespace CryptoHelper.Test
                 "J2DfeSix17sc9p0l32RhNHzm0y7buCfySEqap/iiv1rwgYnRgIyNAzfR7N7WdQ==\n" +
                 "-----END RSA PRIVATE KEY-----\n";
 
-            var encryptedMessage = bouncyCryptoHelper.EncryptMessage(input, publicKey);
-            var output = bouncyCryptoHelper.DecryptMessage(encryptedMessage, privateKey);
+            var encryptedMessage = bouncyCryptoHelper.EncryptMessage(input, mobilePublicKey);
+            var output = bouncyCryptoHelper.DecryptMessage(encryptedMessage, mobilePrivateKey);
 
             Assert.Equal(input, output);
         }
 
         [Fact]
-        public void RsaSignTest()
+        public void MobileReactNativeRsaNativeVerificationTest()
         {
-            var bouncyCryptoHelper = new BouncyCryptoHelper("RSA");
-            var bouncyGenerator = new BouncyCastleKeyGenerator(2048);
-            var keys = bouncyCryptoHelper.GenerateKeyPair();
+            var bouncyCryptoHelper = new BouncyCryptoHelper();
+            var mobilePublicKey = "-----BEGIN RSA PUBLIC KEY-----\n" +
+                                  "MIICCgKCAgEAvFv4OwYYDMWUHR0Lijy+9f26i8ULVG5vYkk7NRL2N0aNec8qO9YL\n" +
+                                  "LtF7+WS2lXuY8jHDdL/k7VqdQPtBWK50JsOjbQX3jE7HihW1vu6QfoF1GCFBDN9U\n" +
+                                  "rwiBnN3ii+LpUSY1K1xuSmBrGPohK3XzUU58HA7gPFwuC5o3pSYS8NxIW6ThDQwo\n" +
+                                  "zeKygjVBIZ3CvIG2rxFrhOLrjx1xcKRSdrly8JHtMgbQ7kYMTtK6Eqqa3EIGhuyM\n" +
+                                  "oFDfUpImoq5bsa+bOSs1NSfFKBJUXpeH790K+DI1TQm4Fr92fuq6P5nl0F/BTAgD\n" +
+                                  "2hVewfH7N/DctVB6sGgAgwf0rTZN4aiPe2B8q0Uaes4wLXBaY5YxRJ5Ob6jb1+ba\n" +
+                                  "taYBG0nxwkMxZz/c3xF5Tcfo4iGQBcXhI1i+VwC+G4NOe0L2vtxlmcnAZ4gQVxhn\n" +
+                                  "W+j6c36cZ8RIRL5vs3l/UPrdMoIsOLKg+AlI3CM4hjJZDhW+oi+YFeptPoAuz3Wf\n" +
+                                  "I6MyCVtWO2Wq626CUL/NNw38HAsNKEmzqgcgL47iATbapN1BEPNqo0A/I9oPGfVb\n" +
+                                  "ax675QUDMieuEv9D2YU1BELovnE/4pli2svYyJDUKkPtIYbOrxKdxvp2tymQkujr\n" +
+                                  "RYoHDJSMtLD13BBmI4iEKUeFGsf4reuSKwU7AlgXllZ879X5ZK5Yw5kCAwEAAQ==\n" +
+                                  "-----END RSA PUBLIC KEY-----\n";
 
-            var input = "Example message for decryption/encription! With spec symbol �";
-            var publicKey = keys.Item1;
-            var privateKey = keys.Item2;
+            
 
-            var encryptedMessage = bouncyCryptoHelper.SignMessage(input, privateKey);
-            Assert.True(bouncyCryptoHelper.VerifyMessage(input, encryptedMessage, publicKey));
+            var mobileMessage = "The message was encrypted by RSA only!!! With spec symbol ™";
+            var mobileSignature = "aDxQ11bzIOc4WsUnwxVUpdh3OoLex2h6ICVBL01Ine75URIoqXRqosD5PE0Z49IZkw4+76fLIO+3" +
+                                  "9UA+9VoVTZ6vZ7EIgh2hDwJ1TFbM4ecCQxEkH7V+IczWLB3q7oPSM8+R8UxfX8Xkkz+HwwsDGEiQ" +
+                                  "pKcv6lDFhK7NbvWNPfpV5lP3nNi2r4P+/MTi98mPAcPu3411Fa5k9rQHLsFXRovzFUaKR/KThNn2" +
+                                  "NRMpfHy4A1EjqTuX4o3rqZxSe3CIlzA3W2P0+FA/w1hpM6tu7VthxbYYCu4v0GrnrdgF8vhH7JC4" +
+                                  "a/pxTLRBFdPRnicjEUiQDUYAzpqWgMeuSP52w7sw27DjC+eNj26kGLNY0W3N8h5AhFWe3BF95leE" +
+                                  "ZrRHWLlt65V8SLBc1WA0IJKby9HBJSOHyk7oNNrD+ue5nJ8rq3UIR3NWOraaDo4W3xFvJb+j4ghh" +
+                                  "i/9ZD2bBb56119Doo4mQog5ouYuwVVaY54ya/WY6Uo6tog4t0gigFmXAYV5YkKi+tvproqScGeX5" +
+                                  "yfekWF3UMMmI5gas1fPNIIUuCRHb8W0ESfnSsUVzBS3M01fwkg2sSsZfCJuf026gl9LlleudqKHh" +
+                                  "aN7NPajLnJh57rZTLOLuK3CWtwn5/sN2Dw7mgxB98N5h0uyFiMUd3a6HR6iNvKBHGB/eXow4KbU=";
+
+            Assert.True(bouncyCryptoHelper.VerifyMessage(mobileMessage, mobileSignature, mobilePublicKey));
+        }
+        
+        [Fact]
+        public void MobileReactNativeBiometricsVerificationTest()
+        {
+            var bouncyCryptoHelper = new BouncyCryptoHelper(4096, 256);
+            var mobilePublicKey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0/WxH1V1ZBbFfLIjJY4jDvvI0cXWpaJT4B/EEd+A1cTTy4R2nn9LnznKXJTSrQABAWcMLyvqDI9aFHXsAx5y6mVwf8zXuHEd+lkIV5/YCDrtpcNEeQIFbd8OrCP/zPEXnKpZ9Zcjs2baOsHhwX4g+39qJDMnUMn/fZGz4zoM2JC81TsF3AcVFnqIKcnF81gGupo5eOfYevTAEf1CAADdEmwYypPA6sHp+ktTte4bcz62HEXaGBAWda2wVW6CpIXjMnzboXLHKIDTIPUd383NNEbep+n7RfEYOH+iMRSM6KaRiJW+WAuHTnSJ+eWYxZIu96D3VkSKUF1hl1MF4UDOawIDAQAB";
+            var mobileMessage = "The message was encrypted by biometric data!!! With spec symbol ™";
+            var mobileSignature = "P2TGa0ZhrZQozzGl2rN5zFWlS/6/46rIcphbYUUON1SRzUoYDK1ODmnEc5nT0kRw+4YbxMY1FFlqWuTVCwvuemacjoRZejGUb4DP5eQplzBVn/DB45/zZlmFEvqTl5O860AymEHUREjZtbBOfKQiQJFuhYRpbTvoSAlR2aQWUM++A4MGBL+BzFbI7PBYR9abwT7b8m1tVqqgGbrnk4RX5mWu1DczR1rNfIVnn9HshumQmE9ZQV+VIX8W4ZB8lHXqmu8XzTuZEwlaakEeJSbX6J3qHVqd28uxHTIccKWl9LfgmCbi/AOH01pDYEwAwXLKXnE5fejtBnOClLYKt+hdqw==";
+
+            Assert.True(bouncyCryptoHelper.VerifyMessage(mobileMessage, mobileSignature, mobilePublicKey));
         }
     }
 }
