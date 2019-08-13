@@ -120,7 +120,7 @@ namespace CryptoHelper.Test
         [Fact]
         public void MobileReactNativeRsaNativeVerificationTest()
         {
-            var bouncyCryptoHelper = new BouncyCryptoHelper();
+            var bouncyCryptoHelper = new BouncyCryptoHelper(4096, 512);
             var mobilePublicKey = "-----BEGIN RSA PUBLIC KEY-----\n" +
                                   "MIICCgKCAgEAvFv4OwYYDMWUHR0Lijy+9f26i8ULVG5vYkk7NRL2N0aNec8qO9YL\n" +
                                   "LtF7+WS2lXuY8jHDdL/k7VqdQPtBWK50JsOjbQX3jE7HihW1vu6QfoF1GCFBDN9U\n" +
