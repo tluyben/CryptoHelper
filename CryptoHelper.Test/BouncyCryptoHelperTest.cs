@@ -14,11 +14,11 @@ namespace CryptoHelper.Test
             var input = "Example message for decryption/encryption! With spec symbol ™";
             var publicKey = keys.Item1;
             var privateKey = keys.Item2;
-
+            
             var encryptedMessage = bouncyCryptoHelper.EncryptMessage(input, publicKey);
             
             var output = bouncyCryptoHelper.DecryptMessage(encryptedMessage, privateKey);
-
+            
             Assert.Equal(input,output);
         }
         
