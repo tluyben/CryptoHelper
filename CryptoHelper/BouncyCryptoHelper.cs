@@ -114,13 +114,19 @@ namespace CryptoHelper
 
         public string SignMessage(string message, string privateKey)
         {
+
+            return Convert.ToBase64String(SignMessageAsBytes(message, privateKey));
+        }
+        
+        public byte[] SignMessageAsBytes(string message, string privateKey)
+        {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
             var signer = new RsaDigestSigner(GetShaDigest());
 
             signer.Init(true, GetPrivate(privateKey));
             signer.BlockUpdate(bytesToEncrypt, 0, bytesToEncrypt.Length);
 
-            return Convert.ToBase64String(signer.GenerateSignature());
+            return signer.GenerateSignature(); 
         }
 
         public bool VerifyMessage(string message, string signature, string publicKey)
