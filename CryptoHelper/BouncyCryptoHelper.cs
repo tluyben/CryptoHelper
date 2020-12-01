@@ -49,7 +49,7 @@ namespace CryptoHelper
             return Convert.ToBase64String(encryptEngine.ProcessBlock(bytesToEncrypt, 0, bytesToEncrypt.Length));
         }
         
-        private string ToPem(object obj)
+        public static string ToPem(object obj)
         {
             using (var mem = new MemoryStream())
             {
@@ -65,6 +65,14 @@ namespace CryptoHelper
             }
         }
 
+        
+
+        public Tuple<AsymmetricKeyParameter, AsymmetricKeyParameter> GenerateKeyPairNoPem()
+        {
+            var keys = _keyPairGenerator.GenerateKeyPair();
+
+            return new Tuple<AsymmetricKeyParameter, AsymmetricKeyParameter>(keys.Public, keys.Private);
+        }
         public Tuple<string, string> GenerateKeyPair()
         {
             var keys = _keyPairGenerator.GenerateKeyPair();
