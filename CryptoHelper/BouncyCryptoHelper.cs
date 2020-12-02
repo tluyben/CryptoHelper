@@ -40,6 +40,16 @@ namespace CryptoHelper
             return Encoding.UTF8.GetString(decryptEngine.ProcessBlock(bytesToDecrypt, 0, bytesToDecrypt.Length));
         }
 
+        public byte[] EncryptMessageAsBytes(string message, AsymmetricKeyParameter publicKey)
+        {
+            var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
+            var encryptEngine = new Pkcs1Encoding(new RsaEngine());
+
+            encryptEngine.Init(true, publicKey);
+
+            return encryptEngine.ProcessBlock(bytesToEncrypt, 0, bytesToEncrypt.Length);
+        }
+
         public string EncryptMessage(string message, string publicKey)
         {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
