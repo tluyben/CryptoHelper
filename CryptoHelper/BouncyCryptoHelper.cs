@@ -129,6 +129,17 @@ namespace CryptoHelper
             return signer.GenerateSignature(); 
         }
 
+        public bool VerifyMessage(string message, byte[] signature, AsymmetricKeyParameter publicKey)
+        {
+            var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
+            var signer = new RsaDigestSigner(GetShaDigest());
+            signer.Init(false, publicKey);
+
+            signer.BlockUpdate(bytesToEncrypt, 0, bytesToEncrypt.Length);
+
+            return signer.VerifySignature(signature);
+
+        }
         public bool VerifyMessage(string message, string signature, string publicKey)
         {
             var bytesToEncrypt = Encoding.UTF8.GetBytes(message);
